@@ -4301,7 +4301,12 @@
     function buildMacroMetrics(statement, rows) {
       const revenue = getStatementActual(statement, '13.Faturamento Bruto');
       const netRevenue = getStatementActual(statement, 'Faturamento Liquido');
-      const gm = getStatementActual(statement, 'GM');
+      const baseSummary = buildCategorySummary(rows || []);
+      const baseLookup = createSummaryLookup(baseSummary);
+      const baseGm = sumCategoryPair(baseLookup, ['GM']);
+      const baseGmCount = countCategory(baseLookup, ['GM']);
+      const calculatedGm = getStatementActual(statement, 'GM');
+      const gm = baseGmCount > 0 ? baseGm.actual : calculatedGm;
       const advertising = Math.abs(getSubcategoryActual(rows, findHeader(dashboardState.headers, ['Sub Categoria', 'Subcategoria', 'Sub-Categoria']) || '', 'Publicidade'));
       const gmPercent = netRevenue === 0 ? 0 : gm / netRevenue;
       const tacos = revenue === 0 ? 0 : advertising / revenue;
@@ -4378,9 +4383,9 @@
         groups.set(name, current);
       });
 
-      const subcategoryColumn = findHeader(dashboardState.headers, ['Sub Categoria', 'Subcategoria', 'Sub-Categoria']) || '';
       return Array.from(groups.values()).map(function (group) {
-        const metrics = buildFastFinancialMetrics(group.rows, subcategoryColumn);
+        const statement = buildFinancialStatement(buildCategorySummary(group.rows), group.rows);
+        const metrics = buildMacroMetrics(statement, group.rows);
 
         return {
           name: group.name,
@@ -4407,9 +4412,9 @@
         groups.set(name, current);
       });
 
-      const subcategoryColumn = findHeader(dashboardState.headers, ['Sub Categoria', 'Subcategoria', 'Sub-Categoria']) || '';
       return Array.from(groups.values()).map(function (group) {
-        const metrics = buildFastFinancialMetrics(group.rows, subcategoryColumn);
+        const statement = buildFinancialStatement(buildCategorySummary(group.rows), group.rows);
+        const metrics = buildMacroMetrics(statement, group.rows);
 
         return {
           name: group.name,
@@ -5092,12 +5097,13 @@
     }
 
     function createMacroHierarchyNode(group) {
-      const subcategoryColumn = findHeader(dashboardState.headers, ['Sub Categoria', 'Subcategoria', 'Sub-Categoria']) || '';
-      const metrics = buildFastFinancialMetrics(group.rows, subcategoryColumn);
+      const statement = buildFinancialStatement(buildCategorySummary(group.rows), group.rows);
+      const metrics = buildMacroMetrics(statement, group.rows);
 
       return {
         label: group.label,
         revenue: metrics.revenue,
+        netRevenue: metrics.netRevenue,
         gm: metrics.gm,
         gmPercent: metrics.gmPercent,
         advertising: metrics.advertising
