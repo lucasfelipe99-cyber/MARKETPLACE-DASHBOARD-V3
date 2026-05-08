@@ -1307,18 +1307,18 @@
     }
 
     .sku-table th.sortable::after {
-      content: " â†•";
+      content: " ↕";
       color: var(--text-muted);
       font-size: 11px;
     }
 
     .sku-table th.sortable.sorted-asc::after {
-      content: " â†‘";
+      content: " ↑";
       color: var(--accent);
     }
 
     .sku-table th.sortable.sorted-desc::after {
-      content: " â†“";
+      content: " ↓";
       color: var(--accent);
     }
 
@@ -2490,6 +2490,37 @@
     /*
       Mostra erro se nenhuma linha do ano atual for encontrada.
     */
+
+    function getDisplayLabel(value) {
+      const text = String(value || '');
+      const normalized = normalizeText(text);
+      const labels = {
+        '01.preco unitario': '01.Pre?o unitario',
+        '05.mao de obra': '05.M?o de Obra',
+        'comissao': 'Comiss?o',
+        'anuncio': 'An?ncio',
+        'variacao': 'Varia??o',
+        'variacao mtd': 'Varia??o MTD'
+      };
+      const badA = String.fromCharCode(195, 167);
+      const badATilde = String.fromCharCode(195, 163);
+      const badAcute = String.fromCharCode(195, 161);
+      const badU = String.fromCharCode(195, 186);
+      const badDoubleU = String.fromCharCode(195, 131, 194, 186);
+
+      if (labels[normalized]) {
+        return labels[normalized];
+      }
+
+      return text
+        .split('Pre' + badA + 'o unit' + badAcute + 'rio').join('Pre?o unitario')
+        .split('M' + badATilde + 'o de Obra').join('M?o de Obra')
+        .split('Comiss' + badATilde + 'o').join('Comiss?o')
+        .split('An' + badU + 'ncio').join('An?ncio')
+        .split('An' + badDoubleU + 'ncio').join('An?ncio')
+        .split('Varia' + badA + badATilde + 'o').join('Varia??o');
+    }
+
     function validateFilteredRows(rows) {
       if (rows.length <= 1) {
         const currentYear = new Date().getFullYear();
@@ -3041,7 +3072,7 @@
       const marketplaceMetrics = buildArea2GroupedMetrics(rows, ['Marketplace']);
       const marketplaceSaleMetrics = buildArea2GroupedMetrics(rows, ['Marketplace venda']);
       const skuMetrics = buildArea2GroupedMetrics(rows, ['SKU']);
-      const adMetrics = buildArea2GroupedMetrics(rows, ['Id anuncio', 'Id anÃºncio', 'Anuncio', 'AnÃºncio']);
+      const adMetrics = buildArea2GroupedMetrics(rows, ['Id an?ncio', 'Id anúncio', 'Anúncio', 'Anúncio']);
       const dateMetrics = buildArea2DateMetrics(rows);
       const marketplaceSelections = getArea2FilterSelection('marketplace');
       const dateSeries = marketplaceSelections.length > 1
@@ -3173,7 +3204,7 @@
         { label: 'Quantidade', value: formatNumber(metrics.quantity) },
         { label: 'Faturamento', value: formatCurrency(metrics.revenue) },
         { label: 'Preco unitario medio', value: formatCurrency(metrics.averageUnitPrice) },
-        { label: 'Comissao', value: formatCurrency(metrics.commission) },
+        { label: 'Comiss?o', value: formatCurrency(metrics.commission) },
         { label: 'Frete', value: formatCurrency(metrics.freight) },
         { label: 'Cancelamentos', value: formatCurrency(metrics.cancelRefund) },
         { label: 'Moedas', value: formatCurrency(metrics.coins) },
@@ -3312,8 +3343,8 @@
         ? createMultiLineChartCard('Liquido por Data', dateSeries, 'net')
         : createLineChartCard('Liquido por Data', dateMetrics, 'net');
       const ticketChart = dateSeries && dateSeries.length > 1
-        ? createMultiLineChartCard('Ticket medio por Data', dateSeries, 'averageTicket')
-        : createLineChartCard('Ticket medio por Data', dateMetrics, 'averageTicket');
+        ? createMultiLineChartCard('Ticket m?dio por Data', dateSeries, 'averageTicket')
+        : createLineChartCard('Ticket m?dio por Data', dateMetrics, 'averageTicket');
 
       grid.className = 'macro-grid area2-summary-grid';
       grid.appendChild(revenueChart);
@@ -3532,7 +3563,7 @@
       title.textContent = 'Detalhamento Area 2';
       scroll.className = 'macro-table-scroll';
       table.className = 'macro-table';
-      thead.innerHTML = '<tr><th>Marketplace</th><th>Categoria</th><th>Marketplace venda</th><th>SKU</th><th>Id anuncio</th><th>Ticket medio</th><th>Faturamento</th><th>Quantidade</th><th>Comissao</th><th>Frete</th><th>Liquido</th></tr>';
+      thead.innerHTML = '<tr><th>Marketplace</th><th>Categoria</th><th>Marketplace venda</th><th>SKU</th><th>Id an?ncio</th><th>Ticket m?dio</th><th>Faturamento</th><th>Quantidade</th><th>Comiss?o</th><th>Frete</th><th>Liquido</th></tr>';
 
       detailRows.forEach(function (item) {
         const tr = document.createElement('tr');
@@ -3555,7 +3586,7 @@
       const categoryColumn = getArea2Column(['Categoria']);
       const marketplaceSaleColumn = getArea2Column(['Marketplace venda']);
       const skuColumn = getArea2Column(['SKU']);
-      const adColumn = getArea2Column(['Id anuncio', 'Id anúncio', 'Anuncio', 'Anúncio']);
+      const adColumn = getArea2Column(['Id an?ncio', 'Id anúncio', 'Anúncio', 'Anúncio']);
       const marketplaceIndex = dashboardState.headers.indexOf(marketplaceColumn);
       const categoryIndex = dashboardState.headers.indexOf(categoryColumn);
       const marketplaceSaleIndex = dashboardState.headers.indexOf(marketplaceSaleColumn);
@@ -3751,7 +3782,7 @@
     function buildArea2Metrics(rows) {
       const revenue = sumArea2Column(rows, ['Preco total com desconto', 'Preço total com desconto']);
       const quantity = sumArea2Column(rows, ['Quantidade']);
-      const commission = sumArea2Column(rows, ['Comissao', 'Comissão']);
+      const commission = sumArea2Column(rows, ['Comiss?o', 'Comissão']);
       const freight = sumArea2Column(rows, ['Tarifa de frete']);
       const cancelRefund = sumArea2Column(rows, ['Cancelamentos e reembolsos (BRL)', 'Cancelamentos e reembolsos', 'Cancelamentos']);
       const coins = sumArea2Column(rows, ['MOEDAS SHOPEE', 'MOEDAS']);
@@ -4051,7 +4082,7 @@
       title.textContent = titleText;
       scroll.className = 'daily-table-wrap';
       table.className = 'daily-table';
-      thead.innerHTML = '<tr><th>Categoria</th><th>Preco medio</th><th>Faturamento</th><th>Share</th><th>Var</th></tr>';
+      thead.innerHTML = '<tr><th>Categoria</th><th>Pre?o m?dio</th><th>Faturamento</th><th>Share</th><th>Var</th></tr>';
 
       if (!items.length) {
         const tr = document.createElement('tr');
@@ -4269,13 +4300,14 @@
 
     function buildMacroMetrics(statement, rows) {
       const revenue = getStatementActual(statement, '13.Faturamento Bruto');
+      const netRevenue = getStatementActual(statement, 'Faturamento Liquido');
       const gm = getStatementActual(statement, 'GM');
       const advertising = Math.abs(getSubcategoryActual(rows, findHeader(dashboardState.headers, ['Sub Categoria', 'Subcategoria', 'Sub-Categoria']) || '', 'Publicidade'));
-      const gmPercent = revenue === 0 ? 0 : gm / revenue;
+      const gmPercent = netRevenue === 0 ? 0 : gm / netRevenue;
       const tacos = revenue === 0 ? 0 : advertising / revenue;
       const moas = gm - advertising;
 
-      return { revenue, gm, gmPercent, advertising, tacos, moas };
+      return { revenue, netRevenue, gm, gmPercent, advertising, tacos, moas };
     }
 
     function createMacroKpis(metrics) {
@@ -4353,6 +4385,7 @@
         return {
           name: group.name,
           revenue: metrics.revenue,
+          netRevenue: metrics.netRevenue,
           gm: metrics.gm,
           advertising: metrics.advertising
         };
@@ -4381,6 +4414,7 @@
         return {
           name: group.name,
           revenue: metrics.revenue,
+          netRevenue: metrics.netRevenue,
           gm: metrics.gm,
           advertising: metrics.advertising
         };
@@ -4489,7 +4523,7 @@
       const skuColumn = findHeader(dashboardState.headers, ['SKU']);
       const categoryColumn = findHeader(dashboardState.headers, ['Categoria2', 'Categoria 2']) || dashboardState.groupColumn;
 
-      const adColumn = findHeader(dashboardState.headers, ['Id anúncio', 'Id anuncio', 'Anúncio', 'Anuncio', 'Id anÃºncio', 'Id anÃƒÂºncio']);
+      const adColumn = findHeader(dashboardState.headers, ['Id anúncio', 'Id an?ncio', 'Anúncio', 'Anúncio', 'Id anúncio', 'Id anúncio']);
 
       return {
         marketplaceIndex: dashboardState.headers.indexOf(marketplaceColumn),
@@ -4563,7 +4597,7 @@
       return {
         revenue: metrics.revenue,
         gm: metrics.gm,
-        gmPercent: metrics.gmPercentByRevenue,
+        gmPercent: metrics.gmPercent,
         quantity: metrics.quantity,
         averageTicket: metrics.averageTicket,
         advertising: metrics.advertising,
@@ -4585,7 +4619,7 @@
         c: { count: 0, revenue: 0 }
       });
       const cards = [
-        { label: 'Anuncios analisados', value: String(items.length) },
+        { label: 'Anúncios analisados', value: String(items.length) },
         { label: 'Faturamento total', value: formatCurrency(totals.total) },
         { label: 'Curva A', value: totals.a.count + ' SKUs | ' + formatPercent(totals.total ? totals.a.revenue / totals.total : 0) },
         { label: 'Curva B', value: totals.b.count + ' SKUs | ' + formatPercent(totals.total ? totals.b.revenue / totals.total : 0) },
@@ -4650,7 +4684,7 @@
 
       table.appendChild(thead);
       table.appendChild(tbody);
-      card.appendChild(createTableCardHeader('Curva ABC por Anuncio', function () { return table; }));
+      card.appendChild(createTableCardHeader('Curva ABC por Anúncio', function () { return table; }));
       scroll.appendChild(table);
       card.appendChild(scroll);
 
@@ -5002,7 +5036,7 @@
       const categoryColumn = findHeader(dashboardState.headers, ['Categoria2', 'Categoria 2'])
         || dashboardState.groupColumn;
       const skuColumn = findHeader(dashboardState.headers, ['SKU']);
-      const adColumn = findHeader(dashboardState.headers, ['Id anÃºncio', 'Id anuncio', 'AnÃºncio', 'Anuncio', 'Id anÃƒÂºncio']);
+      const adColumn = findHeader(dashboardState.headers, ['Id anúncio', 'Id an?ncio', 'Anúncio', 'Anúncio', 'Id anúncio']);
       const marketplaceIndex = dashboardState.headers.indexOf(marketplaceColumn);
       const categoryIndex = dashboardState.headers.indexOf(categoryColumn);
       const skuIndex = dashboardState.headers.indexOf(skuColumn);
@@ -5022,7 +5056,7 @@
         const categoryGroup = getOrCreateMacroGroup(categoryGroups, category, category);
         const marketplaceGroup = getOrCreateMacroGroup(categoryGroup.children, marketplace, marketplace);
         const skuGroup = getOrCreateMacroGroup(marketplaceGroup.children, sku, 'SKU: ' + sku);
-        const adGroup = getOrCreateMacroGroup(skuGroup.children, ad, 'AnÃºncio: ' + ad);
+        const adGroup = getOrCreateMacroGroup(skuGroup.children, ad, 'Anúncio: ' + ad);
 
         categoryGroup.rows.push(row);
         marketplaceGroup.rows.push(row);
@@ -5035,7 +5069,7 @@
 
     function getOrCreateMacroGroup(groups, key, label) {
       if (!groups.has(key)) {
-        groups.set(key, { label, rows: [], children: new Map() });
+        groups.set(key, { label: getDisplayLabel(label), rows: [], children: new Map() });
       }
 
       return groups.get(key);
@@ -5065,7 +5099,7 @@
         label: group.label,
         revenue: metrics.revenue,
         gm: metrics.gm,
-        gmPercent: metrics.gmPercentByRevenue,
+        gmPercent: metrics.gmPercent,
         advertising: metrics.advertising
       };
     }
@@ -5093,7 +5127,7 @@
 
         row.className = 'macro-bar-row';
         row.title = item.name + ': ' + formatBarValue(item, key, options);
-        label.textContent = item.name;
+        label.textContent = getDisplayLabel(item.name);
         track.className = 'macro-bar-track';
         fill.className = 'macro-bar-fill';
         fill.style.width = Math.max((Math.abs(item[key]) / maxValue) * 100, 2) + '%';
@@ -5118,7 +5152,10 @@
       const value = item[key];
 
       if (options && options.showRevenuePercent) {
-        const percent = item.revenue === 0 ? 0 : Math.abs(value) / Math.abs(item.revenue);
+        const percentBase = key === 'gm' && typeof item.netRevenue === 'number'
+          ? item.netRevenue
+          : item.revenue;
+        const percent = percentBase === 0 ? 0 : Math.abs(value) / Math.abs(percentBase);
 
         return formatPercent(percent) + ' | ' + formatCurrency(value);
       }
@@ -5175,7 +5212,7 @@
         'Marketplace',
         'Marketplace venda',
         'SKU',
-        'Id anÃºncio',
+        'Id anúncio',
         'DescriÃ§Ã£o'
       ];
 
@@ -5443,7 +5480,7 @@
       }
 
       const allowedSubcategories = [
-        'ComissÃ£o',
+        'Comissão',
         'Moedas',
         'Publicidade',
         'Rebate',
@@ -5484,7 +5521,7 @@
       const marketplaceExpenses = sumCategoryPair(lookup, ['03.Despesas Marketplace']);
       const marketplaceExpenseCount = countCategory(lookup, ['03.Despesas Marketplace']);
       const rawMaterial = sumCategoryPair(lookup, ['04.Materia Prima']);
-      const labor = sumCategoryPair(lookup, ['05.MÃ£o de Obra']);
+      const labor = sumCategoryPair(lookup, ['05.Mão de Obra']);
       const packaging = sumCategoryPair(lookup, ['06.Embalagem']);
       const energy = sumCategoryPair(lookup, ['07.Energia']);
       const sewing = sumCategoryPair(lookup, ['08.Costura']);
@@ -5498,7 +5535,7 @@
       const marketplaceExpenseDetails = buildMarketplaceExpenseDetails(rows || dashboardState.dataRows);
       const costDetails = [
         createStatementRow('04.Materia Prima', rawMaterial.actual, rawMaterial.forecast, countCategory(lookup, ['04.Materia Prima'])),
-        createStatementRow('05.MÃ£o de Obra', labor.actual, labor.forecast, countCategory(lookup, ['05.MÃ£o de Obra'])),
+        createStatementRow('05.Mão de Obra', labor.actual, labor.forecast, countCategory(lookup, ['05.Mão de Obra'])),
         createStatementRow('06.Embalagem', packaging.actual, packaging.forecast, countCategory(lookup, ['06.Embalagem'])),
         createStatementRow('07.Energia', energy.actual, energy.forecast, countCategory(lookup, ['07.Energia'])),
         createStatementRow('08.Costura', sewing.actual, sewing.forecast, countCategory(lookup, ['08.Costura'])),
@@ -5516,7 +5553,7 @@
         createBlankStatementRow(),
         createStatementRow('13.Faturamento Bruto', grossRevenue.actual, grossRevenue.forecast, countCategory(lookup, ['13.Faturamento Bruto'])),
         createBlankStatementRow(),
-        createStatementRow('01.PreÃ§o unitÃ¡rio', unitPrice.actual, unitPrice.forecast, '', 'number'),
+        createStatementRow('01.Preço unitario', unitPrice.actual, unitPrice.forecast, '', 'number'),
         createBlankStatementRow(),
         createStatementRow('02.Imposto', tax.actual, tax.forecast, countCategory(lookup, ['02.Imposto'])),
         createStatementRow('02.Imposto %', taxPercent.actual, taxPercent.forecast, '', 'percent'),
@@ -5546,7 +5583,7 @@
       const netRevenue = addPairs(grossRevenue, tax);
       const marketplaceExpenses = sumCategoryPair(lookup, ['03.Despesas Marketplace']);
       const rawMaterial = sumCategoryPair(lookup, ['04.Materia Prima']);
-      const labor = sumCategoryPair(lookup, ['05.Mão de Obra', '05.MÃ£o de Obra']);
+      const labor = sumCategoryPair(lookup, ['05.Mão de Obra', '05.Mão de Obra']);
       const packaging = sumCategoryPair(lookup, ['06.Embalagem']);
       const energy = sumCategoryPair(lookup, ['07.Energia']);
       const sewing = sumCategoryPair(lookup, ['08.Costura']);
@@ -5568,6 +5605,7 @@
         averageTicket: quantityValue === 0 ? 0 : revenue / quantityValue,
         revenue,
         gm,
+        netRevenue: netRevenue.actual,
         gmPercent: netRevenue.actual === 0 ? 0 : gm / netRevenue.actual,
         gmPercentByRevenue: revenue === 0 ? 0 : gm / revenue,
         advertising,
@@ -5726,7 +5764,7 @@
       table.className = 'summary-table';
       title.textContent = 'Demonstrativo por Categoria - MTD D-' + getMtdReportDay() + '/' + getCurrentMonthDays();
 
-      thead.innerHTML = '<tr><th>Account</th><th>Forecast</th><th>Actual</th><th>VariaÃ§Ã£o</th><th>MTD</th><th>VariaÃ§Ã£o MTD</th></tr>';
+      thead.innerHTML = '<tr><th>Account</th><th>Forecast</th><th>Actual</th><th>Variação</th><th>MTD</th><th>Variação MTD</th></tr>';
 
       statement.forEach(function (item) {
         const tr = document.createElement('tr');
@@ -5796,10 +5834,10 @@
       const group = getSummaryCollapseGroup(item);
 
       if (!group) {
-        return escapeHtml(item.name);
+        return escapeHtml(getDisplayLabel(item.name));
       }
 
-      return '<button class="statement-toggle" type="button" data-group="' + group + '" aria-expanded="false" aria-label="Abrir ' + escapeHtml(item.name) + '">+</button>' + escapeHtml(item.name);
+      return '<button class="statement-toggle" type="button" data-group="' + group + '" aria-expanded="false" aria-label="Abrir ' + escapeHtml(getDisplayLabel(item.name)) + '">+</button>' + escapeHtml(getDisplayLabel(item.name));
     }
 
     /*
@@ -5858,7 +5896,7 @@
     function getSkuDetailColumns() {
       const marketplaceSaleColumn = findHeader(dashboardState.headers, ['Marketplace venda']);
       const skuColumn = findHeader(dashboardState.headers, ['SKU']);
-      const adColumn = findHeader(dashboardState.headers, ['Id anÃƒÂºncio', 'Id anuncio', 'AnÃƒÂºncio', 'Anuncio']);
+      const adColumn = findHeader(dashboardState.headers, ['Id anúncio', 'Id an?ncio', 'Anúncio', 'Anúncio']);
 
       if (!marketplaceSaleColumn || !skuColumn || !adColumn) {
         return null;
@@ -5891,7 +5929,7 @@
         const nextValue = runningValue + item.variation;
 
         data.push({
-          label: item.name,
+          label: getDisplayLabel(item.name),
           start: runningValue,
           end: nextValue,
           displayValue: item.variation,
@@ -5918,7 +5956,7 @@
     function shouldUseInWaterfall(item) {
       const excludedRows = [
         '14.Quantidade',
-        '01.PreÃ§o unitÃ¡rio',
+        '01.Preço unitario',
         '02.Imposto',
         '02.Imposto %',
         'Faturamento Liquido',
@@ -5952,7 +5990,7 @@
       const columns = getSkuDetailColumns();
       const marketplaceSaleColumn = findHeader(dashboardState.headers, ['Marketplace venda']);
       const skuColumn = findHeader(dashboardState.headers, ['SKU']);
-      const adColumn = findHeader(dashboardState.headers, ['Id anÃºncio', 'Id anuncio', 'AnÃºncio', 'Anuncio']);
+      const adColumn = findHeader(dashboardState.headers, ['Id anúncio', 'Id an?ncio', 'Anúncio', 'Anúncio']);
       const card = document.createElement('section');
       const title = document.createElement('h2');
       const scroll = document.createElement('div');
@@ -5961,14 +5999,14 @@
       const tbody = document.createElement('tbody');
 
       card.className = 'dashboard-card sku-table-card';
-      title.textContent = 'SKU e AnÃºncio';
+      title.textContent = 'SKU e Anúncio';
       scroll.className = 'sku-table-scroll';
       table.className = 'sku-table';
       thead.appendChild(createSkuTableHeader());
 
       if (!columns) {
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td colspan="6">Colunas Marketplace venda, SKU e Id anÃºncio nÃ£o encontradas na base.</td>';
+        tr.innerHTML = '<td colspan="6">Colunas Marketplace venda, SKU e Id anúncio nÃ£o encontradas na base.</td>';
         tbody.appendChild(tr);
       } else {
         const details = precomputedDetails || buildSkuDetails(filteredRows, columns.marketplaceSaleColumn, columns.skuColumn, columns.adColumn);
@@ -5986,7 +6024,7 @@
       table.appendChild(thead);
       table.appendChild(tbody);
       scroll.appendChild(table);
-      card.appendChild(createTableCardHeader('SKU e Anuncio', function () { return table; }));
+      card.appendChild(createTableCardHeader('SKU e Anúncio', function () { return table; }));
       card.appendChild(scroll);
 
       return card;
@@ -6016,7 +6054,7 @@
       const columns = [
         { key: 'marketplaceSale', label: 'Marketplace venda' },
         { key: 'sku', label: 'SKU' },
-        { key: 'ad', label: 'AnÃºncio' },
+        { key: 'ad', label: 'Anúncio' },
         { key: 'revenue', label: 'Faturamento' },
         { key: 'gm', label: 'GM' },
         { key: 'gmPercent', label: 'GM%' }
@@ -6167,14 +6205,14 @@
       const tbody = document.createElement('tbody');
 
       card.className = 'dashboard-card sku-table-card';
-      title.textContent = 'Publicidade por Anuncio';
+      title.textContent = 'Publicidade por Anúncio';
       scroll.className = 'sku-table-scroll';
       table.className = 'sku-table advertising-table';
       thead.appendChild(createAdvertisingTableHeader());
 
       if (!columns) {
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td colspan="7">Colunas Marketplace venda, SKU, Id anÃƒÂºncio e Sub Categoria nÃƒÂ£o encontradas na base.</td>';
+        tr.innerHTML = '<td colspan="7">Colunas Marketplace venda, SKU, Id anúncio e Sub Categoria nÃƒÂ£o encontradas na base.</td>';
         tbody.appendChild(tr);
       } else {
         const details = precomputedDetails || buildAdvertisingDetails(filteredRows, columns.marketplaceSaleColumn, columns.skuColumn, columns.adColumn, columns.subcategoryColumn);
@@ -6198,7 +6236,7 @@
       table.appendChild(thead);
       table.appendChild(tbody);
       scroll.appendChild(table);
-      card.appendChild(createTableCardHeader('Publicidade por Anuncio', function () { return table; }));
+      card.appendChild(createTableCardHeader('Publicidade por Anúncio', function () { return table; }));
       card.appendChild(scroll);
 
       return card;
@@ -6212,7 +6250,7 @@
       const labels = [
         'Marketplace de venda',
         'SKU',
-        'Anuncio',
+        'Anúncio',
         'Faturamento',
         'Publicidade',
         'GM',
@@ -6521,7 +6559,7 @@
       const colorEnabledRows = [
         '14.Quantidade',
         '13.Faturamento Bruto',
-        '01.PreÃ§o unitÃ¡rio',
+        '01.Preço unitario',
         'Faturamento Liquido',
         'GM',
         'GM%'
